@@ -19,7 +19,6 @@ class ApiModel
 
     function getDocumentCount(){
         // keccak-256 de getDocumentCount() es 3d1c227335f9755b3b49b8845a25fff553fbe76676aff139dcdcb6ac8783f91c, se toman los 8 primeros caracteres
-        $url = "http://localhost:8545";
         $data  = [
             'jsonrpc'=>'2.0','method'=>'eth_call','params'=>[[
                 "from"=> self::ACCOUNT, "to"=> self::CONTRACT,"data"=> "0x3d1c2273"],'latest'
@@ -44,21 +43,22 @@ class ApiModel
 
 
     }
+
     function getDocumentAtIndex($index){
         //index plezplasado 32 bytes
         $indexPad =str_pad($index, 64, "0", STR_PAD_LEFT);
         //keccak-256 de getDocumentAtIndex(uint256)77d2ab4fabe09035e251da8807814748a7110687787881ee10e31bb505b9d395, se toman los 8 primeros caracteres
         $call="0x77d2ab4f". $indexPad;
 
-        $url = "http://localhost:8545";
+
         $data  = [
             'jsonrpc'=>'2.0','method'=>'eth_call','params'=>[[
-                "from"=> "0xDd421A95ab8D53919092Cf2A144815905C2BC4Db", "to"=> "0x690Ea531A7ba08BEA5789BB0f708E73CCe864276","data"=> $call],'latest'
+                "from"=> self::ACCOUNT, "to"=> self::CONTRACT,"data"=> $call],'latest'
             ],'id'=>67
         ];
         $params= json_encode($data);
         $handler = curl_init();
-        curl_setopt($handler, CURLOPT_URL, $url);
+        curl_setopt($handler, CURLOPT_URL, self::URl);
         curl_setopt($handler, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
         curl_setopt($handler, CURLOPT_POST,true);
         curl_setopt($handler, CURLOPT_POSTFIELDS, $params);
@@ -81,6 +81,52 @@ class ApiModel
         return $this->Hex2String($argResult);
     }
 
+    function getDocumentList(){
+        $count =$this->getDocumentCount();
+        for($i=0;$i<$count;$i++){
+            $result[$i]= $this->getDocumentAtIndex($i);
+        }
+        return \Graze\GuzzleHttp\JsonRpc\json_encode($result );
+    }
+
+    function exists($id){
+        // hex del id
+        $idHex = $this->String2Hex($id);
+        //tomar el numero de caracteres, dividir por 2 para obtener el numero de bytes y pasar ese numero a hex y dezplazarlo
+        $lengthIdHex=str_pad(dechex(strlen($idHex )/2), 64, "0", STR_PAD_LEFT);
+        //32 bytes desde el id del metodo hasta el argumento, hex de 32 = 20
+        $argIdPos =str_pad(20, 64, "0", STR_PAD_LEFT);
+        //keccak-256 de exists(string)261a323e87a367a6fec01842ab1be2786193d1a5558fde3e4834378f2761ad3a, se toman los 8 primeros caracteres
+        $call="0x261a323e". $argIdPos . $lengthIdHex . $idHex;
+
+        $data  = [
+            'jsonrpc'=>'2.0','method'=>'eth_call','params'=>[[
+                "from"=> self::ACCOUNT, "to"=> self::CONTRACT,"data"=> $call],'latest'
+            ],'id'=>67
+        ];
+        $params= json_encode($data);
+        $handler = curl_init();
+        curl_setopt($handler, CURLOPT_URL, self::URl);
+        curl_setopt($handler, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+        curl_setopt($handler, CURLOPT_POST,true);
+        curl_setopt($handler, CURLOPT_POSTFIELDS, $params);
+        curl_setopt($handler, CURLOPT_RETURNTRANSFER, true);
+        $response = curl_exec ($handler);
+        curl_close($handler);
+        $json=json_decode($response,true);
+        $result=$json['result'];
+        // ejemplo de resultado
+        //0x
+        //0000000000000000000000000000000000000000000000000000000000000000
+        //o
+        //0000000000000000000000000000000000000000000000000000000000000001
+        $argResult = substr($result,65);// string con la longitud de la respuesta y la respuesta
+
+        return $argResult;
+
+    }
+
+//----------------------------------------------------getters------------------------------------------
     function getInvoiceNumber($id){
         // hex del id
         $idHex = $this->String2Hex($id);
@@ -91,15 +137,14 @@ class ApiModel
         //keccak-256 de getInvoiceNumber(string) 0b58d080e1defde665f3203704d8e49229d00557e10cd9b8c6fdb8cb3aba74b6, se toman los 8 primeros caracteres
         $call="0x0b58d080". $argIdPos . $lengthIdHex . $idHex;
 
-        $url = "http://localhost:8545";
         $data  = [
             'jsonrpc'=>'2.0','method'=>'eth_call','params'=>[[
-                "from"=> "0xDd421A95ab8D53919092Cf2A144815905C2BC4Db", "to"=> "0x690Ea531A7ba08BEA5789BB0f708E73CCe864276","data"=> $call],'latest'
+                "from"=> self::ACCOUNT, "to"=> self::CONTRACT,"data"=> $call],'latest'
             ],'id'=>67
         ];
         $params= json_encode($data);
         $handler = curl_init();
-        curl_setopt($handler, CURLOPT_URL, $url);
+        curl_setopt($handler, CURLOPT_URL, self::URl);
         curl_setopt($handler, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
         curl_setopt($handler, CURLOPT_POST,true);
         curl_setopt($handler, CURLOPT_POSTFIELDS, $params);
@@ -134,15 +179,14 @@ class ApiModel
         //keccak-256 de getFiscalYear(string) 08702936ef292a7d8cdb9771680860a168f7280ba759592306236916a440d99e, se toman los 8 primeros caracteres
         $call="0x08702936". $argIdPos . $lengthIdHex . $idHex;
 
-        $url = "http://localhost:8545";
         $data  = [
             'jsonrpc'=>'2.0','method'=>'eth_call','params'=>[[
-                "from"=> "0xDd421A95ab8D53919092Cf2A144815905C2BC4Db", "to"=> "0x690Ea531A7ba08BEA5789BB0f708E73CCe864276","data"=> $call],'latest'
+                "from"=> self::ACCOUNT, "to"=> self::CONTRACT,"data"=> $call],'latest'
             ],'id'=>67
         ];
         $params= json_encode($data);
         $handler = curl_init();
-        curl_setopt($handler, CURLOPT_URL, $url);
+        curl_setopt($handler, CURLOPT_URL, self::URl);
         curl_setopt($handler, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
         curl_setopt($handler, CURLOPT_POST,true);
         curl_setopt($handler, CURLOPT_POSTFIELDS, $params);
@@ -174,15 +218,14 @@ class ApiModel
         //keccak-256 de getInvoiceNumber(string) 0b58d080e1defde665f3203704d8e49229d00557e10cd9b8c6fdb8cb3aba74b6, se toman los 8 primeros caracteres
         $call="0x0b58d080". $argIdPos . $lengthIdHex . $idHex;
 
-        $url = "http://localhost:8545";
         $data  = [
             'jsonrpc'=>'2.0','method'=>'eth_call','params'=>[[
-                "from"=> "0xDd421A95ab8D53919092Cf2A144815905C2BC4Db", "to"=> "0x690Ea531A7ba08BEA5789BB0f708E73CCe864276","data"=> $call],'latest'
+                "from"=> self::ACCOUNT, "to"=> self::CONTRACT,"data"=> $call],'latest'
             ],'id'=>67
         ];
         $params= json_encode($data);
         $handler = curl_init();
-        curl_setopt($handler, CURLOPT_URL, $url);
+        curl_setopt($handler, CURLOPT_URL, self::URl);
         curl_setopt($handler, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
         curl_setopt($handler, CURLOPT_POST,true);
         curl_setopt($handler, CURLOPT_POSTFIELDS, $params);
@@ -214,15 +257,14 @@ class ApiModel
         //keccak-256 de getFactoringTotal(string) a78e902faa5ef78b006227c9216bff9c0815ee4a8a82365f8d20c10487cd6b41, se toman los 8 primeros caracteres
         $call="0xa78e902f". $argIdPos . $lengthIdHex . $idHex;
 
-        $url = "http://localhost:8545";
         $data  = [
             'jsonrpc'=>'2.0','method'=>'eth_call','params'=>[[
-                "from"=> "0xDd421A95ab8D53919092Cf2A144815905C2BC4Db", "to"=> "0x690Ea531A7ba08BEA5789BB0f708E73CCe864276","data"=> $call],'latest'
+                "from"=> self::ACCOUNT, "to"=> self::CONTRACT,"data"=> $call],'latest'
             ],'id'=>67
         ];
         $params= json_encode($data);
         $handler = curl_init();
-        curl_setopt($handler, CURLOPT_URL, $url);
+        curl_setopt($handler, CURLOPT_URL, self::URl);
         curl_setopt($handler, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
         curl_setopt($handler, CURLOPT_POST,true);
         curl_setopt($handler, CURLOPT_POSTFIELDS, $params);
@@ -254,15 +296,14 @@ class ApiModel
         //keccak-256 de getState(string) e33f77ca62a8a5b72df2cc01fef6cf1993d3636288d0cb3668423c17e165f016, se toman los 8 primeros caracteres
         $call="0xe33f77ca". $argIdPos . $lengthIdHex . $idHex;
 
-        $url = "http://localhost:8545";
         $data  = [
             'jsonrpc'=>'2.0','method'=>'eth_call','params'=>[[
-                "from"=> "0xDd421A95ab8D53919092Cf2A144815905C2BC4Db", "to"=> "0x690Ea531A7ba08BEA5789BB0f708E73CCe864276","data"=> $call],'latest'
+                "from"=> self::ACCOUNT, "to"=> self::CONTRACT,"data"=> $call],'latest'
             ],'id'=>67
         ];
         $params= json_encode($data);
         $handler = curl_init();
-        curl_setopt($handler, CURLOPT_URL, $url);
+        curl_setopt($handler, CURLOPT_URL, self::URl);
         curl_setopt($handler, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
         curl_setopt($handler, CURLOPT_POST,true);
         curl_setopt($handler, CURLOPT_POSTFIELDS, $params);
@@ -294,15 +335,14 @@ class ApiModel
         //keccak-256 de getCurrency(string) f8066d6b070491baee72a2526e2f28168d81c57d0548751713bd4b5de1688900, se toman los 8 primeros caracteres
         $call="0xf8066d6b". $argIdPos . $lengthIdHex . $idHex;
 
-        $url = "http://localhost:8545";
         $data  = [
             'jsonrpc'=>'2.0','method'=>'eth_call','params'=>[[
-                "from"=> "0xDd421A95ab8D53919092Cf2A144815905C2BC4Db", "to"=> "0x690Ea531A7ba08BEA5789BB0f708E73CCe864276","data"=> $call],'latest'
+                "from"=> self::ACCOUNT, "to"=> self::CONTRACT,"data"=> $call],'latest'
             ],'id'=>67
         ];
         $params= json_encode($data);
         $handler = curl_init();
-        curl_setopt($handler, CURLOPT_URL, $url);
+        curl_setopt($handler, CURLOPT_URL, self::URl);
         curl_setopt($handler, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
         curl_setopt($handler, CURLOPT_POST,true);
         curl_setopt($handler, CURLOPT_POSTFIELDS, $params);
@@ -334,15 +374,14 @@ class ApiModel
         //keccak-256 de getPaymentType(string) 87570100868db69edafd58092dbfb8e1e473e0890385c935a38b217ab5b71182, se toman los 8 primeros caracteres
         $call="0x87570100". $argIdPos . $lengthIdHex . $idHex;
 
-        $url = "http://localhost:8545";
         $data  = [
             'jsonrpc'=>'2.0','method'=>'eth_call','params'=>[[
-                "from"=> "0xDd421A95ab8D53919092Cf2A144815905C2BC4Db", "to"=> "0x690Ea531A7ba08BEA5789BB0f708E73CCe864276","data"=> $call],'latest'
+                "from"=> self::ACCOUNT, "to"=> self::CONTRACT,"data"=> $call],'latest'
             ],'id'=>67
         ];
         $params= json_encode($data);
         $handler = curl_init();
-        curl_setopt($handler, CURLOPT_URL, $url);
+        curl_setopt($handler, CURLOPT_URL, self::URl);
         curl_setopt($handler, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
         curl_setopt($handler, CURLOPT_POST,true);
         curl_setopt($handler, CURLOPT_POSTFIELDS, $params);
@@ -374,15 +413,14 @@ class ApiModel
         //keccak-256 de getSupplierName(string) 9c72ab0b8d6d82a46cb352f3a53443b91ae149d0707904b6a0355d2f54145680, se toman los 8 primeros caracteres
         $call="0x9c72ab0b". $argIdPos . $lengthIdHex . $idHex;
 
-        $url = "http://localhost:8545";
         $data  = [
             'jsonrpc'=>'2.0','method'=>'eth_call','params'=>[[
-                "from"=> "0xDd421A95ab8D53919092Cf2A144815905C2BC4Db", "to"=> "0x690Ea531A7ba08BEA5789BB0f708E73CCe864276","data"=> $call],'latest'
+                "from"=> self::ACCOUNT, "to"=> self::CONTRACT,"data"=> $call],'latest'
             ],'id'=>67
         ];
         $params= json_encode($data);
         $handler = curl_init();
-        curl_setopt($handler, CURLOPT_URL, $url);
+        curl_setopt($handler, CURLOPT_URL, self::URl);
         curl_setopt($handler, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
         curl_setopt($handler, CURLOPT_POST,true);
         curl_setopt($handler, CURLOPT_POSTFIELDS, $params);
@@ -414,15 +452,14 @@ class ApiModel
         //keccak-256 de getCustomerName(string) 100d4d230c6c8262044d860a036155fd815ab017d3aa3444cdbb303598ffcc05, se toman los 8 primeros caracteres
         $call="0x100d4d23". $argIdPos . $lengthIdHex . $idHex;
 
-        $url = "http://localhost:8545";
         $data  = [
             'jsonrpc'=>'2.0','method'=>'eth_call','params'=>[[
-                "from"=> "0xDd421A95ab8D53919092Cf2A144815905C2BC4Db", "to"=> "0x690Ea531A7ba08BEA5789BB0f708E73CCe864276","data"=> $call],'latest'
+                "from"=> self::ACCOUNT, "to"=> self::CONTRACT,"data"=> $call],'latest'
             ],'id'=>67
         ];
         $params= json_encode($data);
         $handler = curl_init();
-        curl_setopt($handler, CURLOPT_URL, $url);
+        curl_setopt($handler, CURLOPT_URL, self::URl);
         curl_setopt($handler, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
         curl_setopt($handler, CURLOPT_POST,true);
         curl_setopt($handler, CURLOPT_POSTFIELDS, $params);
@@ -454,15 +491,14 @@ class ApiModel
         //keccak-256 de getFinancialInstitutionName(string) 946143a25b2d5ddf413b79af7d18ee479a31d32cccf16457937bd548cc2f02a1, se toman los 8 primeros caracteres
         $call="0x946143a2". $argIdPos . $lengthIdHex . $idHex;
 
-        $url = "http://localhost:8545";
         $data  = [
             'jsonrpc'=>'2.0','method'=>'eth_call','params'=>[[
-                "from"=> "0xDd421A95ab8D53919092Cf2A144815905C2BC4Db", "to"=> "0x690Ea531A7ba08BEA5789BB0f708E73CCe864276","data"=> $call],'latest'
+                "from"=> self::ACCOUNT, "to"=> self::CONTRACT,"data"=> $call],'latest'
             ],'id'=>67
         ];
         $params= json_encode($data);
         $handler = curl_init();
-        curl_setopt($handler, CURLOPT_URL, $url);
+        curl_setopt($handler, CURLOPT_URL, self::URl);
         curl_setopt($handler, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
         curl_setopt($handler, CURLOPT_POST,true);
         curl_setopt($handler, CURLOPT_POSTFIELDS, $params);
@@ -494,15 +530,14 @@ class ApiModel
         //keccak-256 de getFactoringState(string) d712c0bf78b679d8a37960c1a83cbcb5a4aac227abe47e21c725aaf6b006a953, se toman los 8 primeros caracteres
         $call="0xd712c0bf". $argIdPos . $lengthIdHex . $idHex;
 
-        $url = "http://localhost:8545";
         $data  = [
             'jsonrpc'=>'2.0','method'=>'eth_call','params'=>[[
-                "from"=> "0xDd421A95ab8D53919092Cf2A144815905C2BC4Db", "to"=> "0x690Ea531A7ba08BEA5789BB0f708E73CCe864276","data"=> $call],'latest'
+                "from"=> self::ACCOUNT, "to"=> self::CONTRACT,"data"=> $call],'latest'
             ],'id'=>67
         ];
         $params= json_encode($data);
         $handler = curl_init();
-        curl_setopt($handler, CURLOPT_URL, $url);
+        curl_setopt($handler, CURLOPT_URL, self::URl);
         curl_setopt($handler, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
         curl_setopt($handler, CURLOPT_POST,true);
         curl_setopt($handler, CURLOPT_POSTFIELDS, $params);
@@ -534,15 +569,15 @@ class ApiModel
         //keccak-256 de getPaymentTerms(string) 54aed18821336ee39415dcfdcf416a5f88f4c955ca46a47c6631c12b56f2eb75, se toman los 8 primeros caracteres
         $call="0x54aed188". $argIdPos . $lengthIdHex . $idHex;
 
-        $url = "http://localhost:8545";
+
         $data  = [
             'jsonrpc'=>'2.0','method'=>'eth_call','params'=>[[
-                "from"=> "0xDd421A95ab8D53919092Cf2A144815905C2BC4Db", "to"=> "0x690Ea531A7ba08BEA5789BB0f708E73CCe864276","data"=> $call],'latest'
+                "from"=> self::ACCOUNT, "to"=> self::CONTRACT,"data"=> $call],'latest'
             ],'id'=>67
         ];
         $params= json_encode($data);
         $handler = curl_init();
-        curl_setopt($handler, CURLOPT_URL, $url);
+        curl_setopt($handler, CURLOPT_URL, self::URl);
         curl_setopt($handler, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
         curl_setopt($handler, CURLOPT_POST,true);
         curl_setopt($handler, CURLOPT_POSTFIELDS, $params);
@@ -574,15 +609,15 @@ class ApiModel
         //keccak-256 de getInvoiceDate(string) 9510eacf26978c3cddb8764681507cb70cf976e88deb33c75716738abfa3aa64, se toman los 8 primeros caracteres
         $call="0x9510eacf". $argIdPos . $lengthIdHex . $idHex;
 
-        $url = "http://localhost:8545";
+
         $data  = [
             'jsonrpc'=>'2.0','method'=>'eth_call','params'=>[[
-                "from"=> "0xDd421A95ab8D53919092Cf2A144815905C2BC4Db", "to"=> "0x690Ea531A7ba08BEA5789BB0f708E73CCe864276","data"=> $call],'latest'
+                "from"=> self::ACCOUNT, "to"=> self::CONTRACT,"data"=> $call],'latest'
             ],'id'=>67
         ];
         $params= json_encode($data);
         $handler = curl_init();
-        curl_setopt($handler, CURLOPT_URL, $url);
+        curl_setopt($handler, CURLOPT_URL, self::URl);
         curl_setopt($handler, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
         curl_setopt($handler, CURLOPT_POST,true);
         curl_setopt($handler, CURLOPT_POSTFIELDS, $params);
@@ -614,15 +649,14 @@ class ApiModel
         //keccak-256 de getPaymentDate(string) 477f86014c29d9d39b2508ab56b2771744489a60cf960325a77001015799531a, se toman los 8 primeros caracteres
         $call="0x477f8601". $argIdPos . $lengthIdHex . $idHex;
 
-        $url = "http://localhost:8545";
         $data  = [
             'jsonrpc'=>'2.0','method'=>'eth_call','params'=>[[
-                "from"=> "0xDd421A95ab8D53919092Cf2A144815905C2BC4Db", "to"=> "0x690Ea531A7ba08BEA5789BB0f708E73CCe864276","data"=> $call],'latest'
+                "from"=> self::ACCOUNT, "to"=> self::CONTRACT,"data"=> $call],'latest'
             ],'id'=>67
         ];
         $params= json_encode($data);
         $handler = curl_init();
-        curl_setopt($handler, CURLOPT_URL, $url);
+        curl_setopt($handler, CURLOPT_URL, self::URl);
         curl_setopt($handler, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
         curl_setopt($handler, CURLOPT_POST,true);
         curl_setopt($handler, CURLOPT_POSTFIELDS, $params);
@@ -654,15 +688,14 @@ class ApiModel
         //keccak-256 de getExpirationDate(string) cbb9cd5d57a6c7e2204b22b93093b1ceefbd6d55b4220f0b0a3c382032a6d57a, se toman los 8 primeros caracteres
         $call="0xcbb9cd5d". $argIdPos . $lengthIdHex . $idHex;
 
-        $url = "http://localhost:8545";
         $data  = [
             'jsonrpc'=>'2.0','method'=>'eth_call','params'=>[[
-                "from"=> "0xDd421A95ab8D53919092Cf2A144815905C2BC4Db", "to"=> "0x690Ea531A7ba08BEA5789BB0f708E73CCe864276","data"=> $call],'latest'
+                "from"=> self::ACCOUNT, "to"=> self::CONTRACT,"data"=> $call],'latest'
             ],'id'=>67
         ];
         $params= json_encode($data);
         $handler = curl_init();
-        curl_setopt($handler, CURLOPT_URL, $url);
+        curl_setopt($handler, CURLOPT_URL, self::URl);
         curl_setopt($handler, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
         curl_setopt($handler, CURLOPT_POST,true);
         curl_setopt($handler, CURLOPT_POSTFIELDS, $params);
@@ -694,15 +727,14 @@ class ApiModel
         //keccak-256 de getFactoringExpirationDate(string) 8acb1e95bf3571c442fc562adfd5a193438bd78ea731a70ee3a8077eeef351b7, se toman los 8 primeros caracteres
         $call="0x8acb1e95". $argIdPos . $lengthIdHex . $idHex;
 
-        $url = "http://localhost:8545";
         $data  = [
             'jsonrpc'=>'2.0','method'=>'eth_call','params'=>[[
-                "from"=> "0xDd421A95ab8D53919092Cf2A144815905C2BC4Db", "to"=> "0x690Ea531A7ba08BEA5789BB0f708E73CCe864276","data"=> $call],'latest'
+                "from"=> self::ACCOUNT, "to"=> self::CONTRACT,"data"=> $call],'latest'
             ],'id'=>67
         ];
         $params= json_encode($data);
         $handler = curl_init();
-        curl_setopt($handler, CURLOPT_URL, $url);
+        curl_setopt($handler, CURLOPT_URL, self::URl);
         curl_setopt($handler, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
         curl_setopt($handler, CURLOPT_POST,true);
         curl_setopt($handler, CURLOPT_POSTFIELDS, $params);
@@ -750,7 +782,7 @@ class ApiModel
         return $result;
     }
 
-
+//----------------------------------------------------delete--------------------------------------------------
     function deleteDocument($id){
         // hex del id
         $idHex = $this->String2Hex($id);
@@ -762,15 +794,14 @@ class ApiModel
         //keccak-256 de deleteDocument(string) 635994f8db12f568c0607e4ea4ed49f862f8f5b344844da19e37321a497576df
         $call="0x635994f8". $argIdPos.$lengthIdHex.$idHex;
 
-        $url = "http://localhost:8545";
         $data  = [
             'jsonrpc'=>'2.0','method'=>'eth_sendTransaction','params'=>[[
-                "from"=> "0xDd421A95ab8D53919092Cf2A144815905C2BC4Db", "to"=> "0x690Ea531A7ba08BEA5789BB0f708E73CCe864276","gas"=>"0x927c0","data"=> $call]],'id'=>67
+                "from"=> self::ACCOUNT, "to"=> self::CONTRACT,"gas"=>"0x927c0","data"=> $call]],'id'=>67
         ];
         $params= json_encode($data);
         $this->unlockAccount();
         $handler = curl_init();
-        curl_setopt($handler, CURLOPT_URL, $url);
+        curl_setopt($handler, CURLOPT_URL, self::URl);
         curl_setopt($handler, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
         curl_setopt($handler, CURLOPT_POST,true);
         curl_setopt($handler, CURLOPT_POSTFIELDS, $params);
@@ -785,15 +816,14 @@ class ApiModel
     function deleteAll(){
         //keccak-256 de deleteAll() 4c164407fed0cf6a8ddb375aa41136c1c45789dce48020e0f048ec4ad43a1262
         $call="0x4c164407";
-        $url = "http://localhost:8545";
         $data  = [
             'jsonrpc'=>'2.0','method'=>'eth_sendTransaction','params'=>[[
-                "from"=> "0xDd421A95ab8D53919092Cf2A144815905C2BC4Db", "to"=> "0x690Ea531A7ba08BEA5789BB0f708E73CCe864276","gas"=>"0x927c0","data"=> $call]],'id'=>67
+                "from"=> self::ACCOUNT, "to"=> self::CONTRACT,"gas"=>"0x927c0","data"=> $call]],'id'=>67
         ];
         $params= json_encode($data);
         $this->unlockAccount();
         $handler = curl_init();
-        curl_setopt($handler, CURLOPT_URL, $url);
+        curl_setopt($handler, CURLOPT_URL, self::URl);
         curl_setopt($handler, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
         curl_setopt($handler, CURLOPT_POST,true);
         curl_setopt($handler, CURLOPT_POSTFIELDS, $params);
@@ -805,7 +835,7 @@ class ApiModel
         return "hash de la transferencia : ".$result;
     }
 
-
+//-----------------------------------------------------insert--------------------------------------------------
     function insertDocument($id, $invoiceNumber,$fiscalYear,$total ,$factoringTotal ,$state ,$currency,$paymentType,
                             $supplierName,$customerName,$financialInstitutionName,$factoringState,$paymentTerms,
                             $invoiceDate,$paymentDate,$expirationDate,$factoringExpirationDate){
@@ -889,15 +919,14 @@ class ApiModel
             $lengthPaymentTermsHex.$paymentTermsHexPad.
             $lengthInvoiceDateHex.$invoiceDateHexPad;
 
-        $url = self::URl;
         $data  = [
             'jsonrpc'=>'2.0','method'=>'eth_sendTransaction','params'=>[[
-                "from"=> "0xDd421A95ab8D53919092Cf2A144815905C2BC4Db", "to"=> "0x690Ea531A7ba08BEA5789BB0f708E73CCe864276","gas"=>"0x927c0","data"=> $call]],'id'=>67
+                "from"=> self::ACCOUNT, "to"=> self::CONTRACT,"gas"=>"0x927c0","data"=> $call]],'id'=>67
         ];
         $params= json_encode($data);
         $this->unlockAccount();
         $handler = curl_init();
-        curl_setopt($handler, CURLOPT_URL, $url);
+        curl_setopt($handler, CURLOPT_URL, self::URl);
         curl_setopt($handler, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
         curl_setopt($handler, CURLOPT_POST,true);
         curl_setopt($handler, CURLOPT_POSTFIELDS, $params);
@@ -962,15 +991,15 @@ class ApiModel
 
         $dataExtra  = [
             'jsonrpc'=>'2.0','method'=>'eth_sendTransaction','params'=>[[
-                "from"=> "0xDd421A95ab8D53919092Cf2A144815905C2BC4Db", "to"=> "0x690Ea531A7ba08BEA5789BB0f708E73CCe864276","gas"=>"0x927c0","data"=> $callExtra]],'id'=>67
+                "from"=> self::ACCOUNT, "to"=> self::CONTRACT,"gas"=>"0x927c0","data"=> $callExtra]],'id'=>67
         ];
         $paramsExtra= json_encode($dataExtra);
         $this->unlockAccount();
         $handlerExtra = curl_init();
-        curl_setopt($handlerExtra, CURLOPT_URL, $url);
+        curl_setopt($handlerExtra, CURLOPT_URL, self::URl);
         curl_setopt($handlerExtra, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
         curl_setopt($handlerExtra, CURLOPT_POST,true);
-        curl_setopt($handlerExtra, CURLOPT_POSTFIELDS, $params);
+        curl_setopt($handlerExtra, CURLOPT_POSTFIELDS, $paramsExtra);
         curl_setopt($handlerExtra, CURLOPT_RETURNTRANSFER, true);
         $responseExtra = curl_exec ($handlerExtra);
         curl_close($handlerExtra);
@@ -982,7 +1011,7 @@ class ApiModel
     }
 
 
-
+//---------------------------------------------------setters------------------------------------------------------
 
     function setExpirationDate($id,$expirationDate){
         // hex de los parametros
@@ -999,15 +1028,14 @@ class ApiModel
         //keccak-256 de setExpirationDate(string,string) 6547f5faef5286132db7b1b4dc8bb572c7d5902a6913c8184de8207bdcb6e8f7
         $call="0x6547f5fa". $argIdPos .$argExpirationDatePos. $leghtIdHex.$idHex.$leghtExpirationDateHex.$expirationDateHexPad;
 
-        $url = "http://localhost:8545";
         $data  = [
             'jsonrpc'=>'2.0','method'=>'eth_sendTransaction','params'=>[[
-                "from"=> "0xDd421A95ab8D53919092Cf2A144815905C2BC4Db", "to"=> "0x690Ea531A7ba08BEA5789BB0f708E73CCe864276","gas"=>"0x927c0","data"=> $call]],'id'=>67
+                "from"=> self::ACCOUNT, "to"=> self::CONTRACT,"gas"=>"0x927c0","data"=> $call]],'id'=>67
         ];
         $params= json_encode($data);
         $this->unlockAccount();
         $handler = curl_init();
-        curl_setopt($handler, CURLOPT_URL, $url);
+        curl_setopt($handler, CURLOPT_URL, self::URl);
         curl_setopt($handler, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
         curl_setopt($handler, CURLOPT_POST,true);
         curl_setopt($handler, CURLOPT_POSTFIELDS, $params);
@@ -1020,6 +1048,152 @@ class ApiModel
         return "hash de la transferencia : ".$result;
 
     }
+
+    function setFinancialInstitutionName($id,$financialInstitutionName){
+        // hex de los parametros
+        $idHex = $this->String2Hex($id);
+        $financialInstitutionNameHex = $this->String2Hex($financialInstitutionName);
+        $financialInstitutionNameHexPad=str_pad($financialInstitutionNameHex, 64, "0");
+        //tomar el numero de caracteres, dividir por 2 para obtener el numero de bytes y pasar ese numero a hex y dezplazarlo
+        $leghtIdHex = str_pad(dechex(strlen($idHex )/2), 64, "0", STR_PAD_LEFT);
+        $leghtFinancialInstitutionNameHex=str_pad(dechex(strlen($financialInstitutionNameHex )/2), 64, "0", STR_PAD_LEFT);
+        // bytes desde el id del metodo hasta el argumento, hex de (2*32)=64 = 40
+        $argIdPos = str_pad(40, 64, "0", STR_PAD_LEFT);
+        //(5*32)=160 = a0
+        $argFinancialInstitutionNamePos =str_pad("a0", 64, "0", STR_PAD_LEFT);
+        //keccak-256 de setFinancialInstitutionName(string,string) c9acf1e471801e7acd26ccd6b2b1aa6784f01f8a670de454135fd7c78fd263ff
+        $call="0xc9acf1e4". $argIdPos .$argFinancialInstitutionNamePos. $leghtIdHex.$idHex.$leghtFinancialInstitutionNameHex.$financialInstitutionNameHexPad;
+
+        $data  = [
+            'jsonrpc'=>'2.0','method'=>'eth_sendTransaction','params'=>[[
+                "from"=> self::ACCOUNT, "to"=>self::CONTRACT,"gas"=>"0x927c0","data"=> $call]],'id'=>67
+        ];
+        $params= json_encode($data);
+        $this->unlockAccount();
+        $handler = curl_init();
+        curl_setopt($handler, CURLOPT_URL, self::URl);
+        curl_setopt($handler, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+        curl_setopt($handler, CURLOPT_POST,true);
+        curl_setopt($handler, CURLOPT_POSTFIELDS, $params);
+        curl_setopt($handler, CURLOPT_RETURNTRANSFER, true);
+        $response = curl_exec ($handler);
+        curl_close($handler);
+        $json=json_decode($response,true);
+        $result=$json['result'];
+
+        return "hash de la transferencia : ".$result;
+
+    }
+
+    function setPaymentDate($id,$paymentDate){
+        // hex de los parametros
+        $idHex = $this->String2Hex($id);
+        $paymentDateHex = $this->String2Hex($paymentDate);
+        $paymentDateHexPad=str_pad($paymentDateHex, 64, "0");
+        //tomar el numero de caracteres, dividir por 2 para obtener el numero de bytes y pasar ese numero a hex y dezplazarlo
+        $leghtIdHex = str_pad(dechex(strlen($idHex )/2), 64, "0", STR_PAD_LEFT);
+        $leghtPaymentDateHex=str_pad(dechex(strlen($paymentDateHex )/2), 64, "0", STR_PAD_LEFT);
+        // bytes desde el id del metodo hasta el argumento, hex de (2*32)=64 = 40
+        $argIdPos = str_pad(40, 64, "0", STR_PAD_LEFT);
+        //(5*32)=160 = a0
+        $argPaymentDatePos =str_pad("a0", 64, "0", STR_PAD_LEFT);
+        //keccak-256 de setPaymentDate(string,string) f04766898c507d6e8bf6984329d4e1794dd3e8d3441cd1416e62b1d65ab1965f
+        $call="0xf0476689". $argIdPos .$argPaymentDatePos. $leghtIdHex.$idHex.$leghtPaymentDateHex.$paymentDateHexPad;
+
+        $data  = [
+            'jsonrpc'=>'2.0','method'=>'eth_sendTransaction','params'=>[[
+                "from"=> self::ACCOUNT, "to"=> self::CONTRACT,"gas"=>"0x927c0","data"=> $call]],'id'=>67
+        ];
+        $params= json_encode($data);
+        $this->unlockAccount();
+        $handler = curl_init();
+        curl_setopt($handler, CURLOPT_URL, self::URl);
+        curl_setopt($handler, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+        curl_setopt($handler, CURLOPT_POST,true);
+        curl_setopt($handler, CURLOPT_POSTFIELDS, $params);
+        curl_setopt($handler, CURLOPT_RETURNTRANSFER, true);
+        $response = curl_exec ($handler);
+        curl_close($handler);
+        $json=json_decode($response,true);
+        $result=$json['result'];
+
+        return "hash de la transferencia : ".$result;
+
+    }
+
+    function setFactoringExpirationDate($id,$factoringExpirationDate){
+        // hex de los parametros
+        $idHex = $this->String2Hex($id);
+        $factoringExpirationDateHex = $this->String2Hex($factoringExpirationDate);
+        $factoringExpirationDateHexPad=str_pad($factoringExpirationDateHex, 64, "0");
+        //tomar el numero de caracteres, dividir por 2 para obtener el numero de bytes y pasar ese numero a hex y dezplazarlo
+        $leghtIdHex = str_pad(dechex(strlen($idHex )/2), 64, "0", STR_PAD_LEFT);
+        $leghtFactoringExpirationDateHex=str_pad(dechex(strlen($factoringExpirationDateHex )/2), 64, "0", STR_PAD_LEFT);
+        // bytes desde el id del metodo hasta el argumento, hex de (2*32)=64 = 40
+        $argIdPos = str_pad(40, 64, "0", STR_PAD_LEFT);
+        //(5*32)=160 = a0
+        $argFactoringExpirationDatePos =str_pad("a0", 64, "0", STR_PAD_LEFT);
+        //keccak-256 de setFactoringExpirationDate(string,string) 1326917ac0ad4433b3f0e7074cf38aa1e5c560d4a965cae4f0074266b8974bab
+        $call="0x1326917a". $argIdPos .$argFactoringExpirationDatePos. $leghtIdHex.$idHex.$leghtFactoringExpirationDateHex.$factoringExpirationDateHexPad;
+
+        $data  = [
+            'jsonrpc'=>'2.0','method'=>'eth_sendTransaction','params'=>[[
+                "from"=> self::ACCOUNT, "to"=> self::CONTRACT,"gas"=>"0x927c0","data"=> $call]],'id'=>67
+        ];
+        $params= json_encode($data);
+        $this->unlockAccount();
+        $handler = curl_init();
+        curl_setopt($handler, CURLOPT_URL, self::URl);
+        curl_setopt($handler, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+        curl_setopt($handler, CURLOPT_POST,true);
+        curl_setopt($handler, CURLOPT_POSTFIELDS, $params);
+        curl_setopt($handler, CURLOPT_RETURNTRANSFER, true);
+        $response = curl_exec ($handler);
+        curl_close($handler);
+        $json=json_decode($response,true);
+        $result=$json['result'];
+
+        return "hash de la transferencia : ".$result;
+
+    }
+
+    function setFactoringTotal($id,$factoringTotal){
+        // hex de los parametros
+        $idHex = $this->String2Hex($id);
+        $factoringTotalHex = $this->String2Hex($factoringTotal);
+        $factoringTotalHexPad=str_pad($factoringTotalHex, 64, "0");
+        //tomar el numero de caracteres, dividir por 2 para obtener el numero de bytes y pasar ese numero a hex y dezplazarlo
+        $leghtIdHex = str_pad(dechex(strlen($idHex )/2), 64, "0", STR_PAD_LEFT);
+        $leghtFactoringTotalHex=str_pad(dechex(strlen($factoringTotalHex )/2), 64, "0", STR_PAD_LEFT);
+        // bytes desde el id del metodo hasta el argumento, hex de (2*32)=64 = 40
+        $argIdPos = str_pad(40, 64, "0", STR_PAD_LEFT);
+        //(5*32)=160 = a0
+        $argFactoringTotalPos =str_pad("a0", 64, "0", STR_PAD_LEFT);
+        //keccak-256 de setFactoringTotal(string,string) 1cb344f5a06385ff5289043d2a55d40f450218427d6cb0f349832cbd86d517a5
+        $call="0x1cb344f5". $argIdPos .$argFactoringTotalPos. $leghtIdHex.$idHex.$leghtFactoringTotalHex.$factoringTotalHexPad;
+
+        $data  = [
+            'jsonrpc'=>'2.0','method'=>'eth_sendTransaction','params'=>[[
+                "from"=> self::ACCOUNT, "to"=> self::CONTRACT,"gas"=>"0x927c0","data"=> $call]],'id'=>67
+        ];
+        $params= json_encode($data);
+        $this->unlockAccount();
+        $handler = curl_init();
+        curl_setopt($handler, CURLOPT_URL, self::URl);
+        curl_setopt($handler, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+        curl_setopt($handler, CURLOPT_POST,true);
+        curl_setopt($handler, CURLOPT_POSTFIELDS, $params);
+        curl_setopt($handler, CURLOPT_RETURNTRANSFER, true);
+        $response = curl_exec ($handler);
+        curl_close($handler);
+        $json=json_decode($response,true);
+        $result=$json['result'];
+
+        return "hash de la transferencia : ".$result;
+
+    }
+
+//--------------------------------------------------setter state----------------------------------------------------
 
 
 
@@ -1041,8 +1215,6 @@ class ApiModel
         curl_close($handler);
     }
 
-
-
     function String2Hex($string){
         $hex='';
         for ($i=0; $i < strlen($string); $i++){
@@ -1050,7 +1222,6 @@ class ApiModel
         }
         return $hex;
     }
-
 
     function Hex2String($hex){
         $string='';

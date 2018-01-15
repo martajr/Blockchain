@@ -32,21 +32,31 @@ class AccesContract
      */
     public function test()
     {
+        //command server : C:\xampp\php\php.exe bin/console server:run
         $model= new ApiModel();
-        //$foo= $model->setExpirationDate("f1046a81aefa46a1e257855f2bb955ec07180ad96c47bc85b8faf2656b918459","Expiration Date prueba");
-        //$foo = $model->getInvoiceNumber("f7446a81aefa46a1e257855f2bb955ec07180ad96c47bc85b8faf2656b918459");
-        $foo = $model->getDocumentCount();
-        //$foo = $model->getDocumentAtIndex(1);
+
+        /*$foo1= $model->setExpirationDate("f1046a81aefa46a1e257855f2bb955ec07180ad96c47bc85b8faf2656b918459","tests write Expiration Date ");
+        $foo2= $model->setFinancialInstitutionName("f1046a81aefa46a1e257855f2bb955ec07180ad96c47bc85b8faf2656b918459","tests write financial institution name");
+        $foo3= $model->setPaymentDate("f1046a81aefa46a1e257855f2bb955ec07180ad96c47bc85b8faf2656b918459","tests write paymet date");
+        $foo4= $model->setFactoringExpirationDate("f1046a81aefa46a1e257855f2bb955ec07180ad96c47bc85b8faf2656b918459","tests write factoring expiration date");
+        $foo5= $model->setFactoringTotal("f1046a81aefa46a1e257855f2bb955ec07180ad96c47bc85b8faf2656b918459","tests write factoring total");
+        return new Response($foo1.$foo2.$foo3.$foo4.$foo5);*/
+        //$foo = $model->getInvoiceNumber("f1146a81aefa46a1e257855f2bb955ec07180ad96c47bc85b8faf2656b918459");
+        //$foo = $model->getDocumentCount();
+        //$foo = $model->getDocumentAtIndex(0);
         //$foo = $model->getFiscalYear("f7446a81aefa46a1e257855f2bb955ec07180ad96c47bc85b8faf2656b918459");
-        //$foo = nl2br($model->getAll("f7446a81aefa46a1e257855f2bb955ec07180ad96c47bc85b8faf2656b918459"));
+        $foo = nl2br($model->getAll("f1046a81aefa46a1e257855f2bb955ec07180ad96c47bc85b8faf2656b918459"));
         //$foo = $model->deleteDocument("f9446a81aefa46a1e257855f2bb955ec07180ad96c47bc85b8faf2656b918459");
         //$foo = $model->deleteAll();
-        /*$foo = $model->insertDocument("f7446a81aefa46a1e257855f2bb955ec07180ad96c47bc85b8faf2656b918459",
+        /*$foo = $model->insertDocument("f1146a81aefa46a1e257855f2bb955ec07180ad96c47bc85b8faf2656b918459",
             "invoice numbre test","fiscal year test","total test","factoring total test",
             "state test","currency test","payment type test","supplier name test",
             "customer name test","finacial institutio name test","factoring state test",
             "payment term test"," invoice date test","payment date test",
             "expiration date test","factoring expiration date test");*/
+        //$foo = $model->getDocumentList();
+        //$foo = $model->exists("f1146a81aefa46a1e257855f2bb955ec07180ad96c47bc85b8faf2656b918459");
+
 
         return new Response($foo);
 
