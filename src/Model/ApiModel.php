@@ -774,11 +774,11 @@ class ApiModel
         $expirationDate = $this ->getExpirationDate($id);
         $factoringExpirationDate = $this ->getFactoringExpirationDate($id);
 
-        $result="invoiceNumber:".$invoiceNumber."\n"."fiscalYear:".$fiscalYear."\n"."total:".$total."\n"."factoringTotal:".$factoringTotal.
-            "\n"."state:".$state."\n"."currency:".$currency."\n"."paymentType:".$paymentType."\n"."supplierName:".$supplierName."\n".
-            "customerName:".$customerName."\n"."financialInstitutionName:".$financialInstitutionName."\n"."factoringState".$factoringState.
-            "\n"."paymentTerms:".$paymentTerms."\n"."invoiceDate:".$invoiceDate."\n"."paymentDate:".$paymentDate."\n"."expirationDate:"
-            .$expirationDate."\n"."factoringExpirationDate:".$factoringExpirationDate;
+        $result="invoiceNumber: ".$invoiceNumber."\n"."fiscalYear: ".$fiscalYear."\n"."total: ".$total."\n"."factoringTotal: ".$factoringTotal.
+            "\n"."state: ".$state."\n"."currency: ".$currency."\n"."paymentType: ".$paymentType."\n"."supplierName: ".$supplierName."\n".
+            "customerName: ".$customerName."\n"."financialInstitutionName: ".$financialInstitutionName."\n"."factoringState: ".$factoringState.
+            "\n"."paymentTerms: ".$paymentTerms."\n"."invoiceDate: ".$invoiceDate."\n"."paymentDate: ".$paymentDate."\n"."expirationDate: "
+            .$expirationDate."\n"."factoringExpirationDate: ".$factoringExpirationDate;
         return $result;
     }
 
@@ -1195,9 +1195,163 @@ class ApiModel
 
 //--------------------------------------------------setter state----------------------------------------------------
 
+    function setStatePending($id){
+        // hex de los parametros
+        $idHex = $this->String2Hex($id);
+        //tomar el numero de caracteres, dividir por 2 para obtener el numero de bytes y pasar ese numero a hex y dezplazarlo
+        $leghtIdHex = str_pad(dechex(strlen($idHex )/2), 64, "0", STR_PAD_LEFT);
+        // bytes desde el id del metodo hasta el argumento, hex de (2*32)=64 = 40
+        $argIdPos = str_pad(20, 64, "0", STR_PAD_LEFT);
+        //keccak-256 de setStatePending(string) cfff7c2a06af7a8e9baac745b3b73d7fd32e7e55be2c7c5128763cbb1adfc767
+        $call="0xcfff7c2a".$argIdPos.$leghtIdHex.$idHex;
+
+        $data  = [
+            'jsonrpc'=>'2.0','method'=>'eth_sendTransaction','params'=>[[
+                "from"=> self::ACCOUNT, "to"=> self::CONTRACT,"gas"=>"0x927c0","data"=> $call]],'id'=>67
+        ];
+        $params= json_encode($data);
+        $this->unlockAccount();
+        $handler = curl_init();
+        curl_setopt($handler, CURLOPT_URL, self::URl);
+        curl_setopt($handler, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+        curl_setopt($handler, CURLOPT_POST,true);
+        curl_setopt($handler, CURLOPT_POSTFIELDS, $params);
+        curl_setopt($handler, CURLOPT_RETURNTRANSFER, true);
+        $response = curl_exec ($handler);
+        curl_close($handler);
+        $json=json_decode($response,true);
+        $result=$json['result'];
+
+        return "hash de la transferencia : ".$result;
+
+    }
+
+    function setStateAcceptedfromPending($id){
+        // hex de los parametros
+        $idHex = $this->String2Hex($id);
+        //tomar el numero de caracteres, dividir por 2 para obtener el numero de bytes y pasar ese numero a hex y dezplazarlo
+        $leghtIdHex = str_pad(dechex(strlen($idHex )/2), 64, "0", STR_PAD_LEFT);
+        // bytes desde el id del metodo hasta el argumento, hex de (2*32)=64 = 40
+        $argIdPos = str_pad(20, 64, "0", STR_PAD_LEFT);
+        //keccak-256 de setStateAcceptedfromPending(string) 3cfaffbda2be6d01900ff8d51668ccceb2292299ccbdbd8bcfc550104c82193c
+        $call="0x3cfaffbd".$argIdPos.$leghtIdHex.$idHex;
+
+        $data  = [
+            'jsonrpc'=>'2.0','method'=>'eth_sendTransaction','params'=>[[
+                "from"=> self::ACCOUNT, "to"=> self::CONTRACT,"gas"=>"0x927c0","data"=> $call]],'id'=>67
+        ];
+        $params= json_encode($data);
+        $this->unlockAccount();
+        $handler = curl_init();
+        curl_setopt($handler, CURLOPT_URL, self::URl);
+        curl_setopt($handler, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+        curl_setopt($handler, CURLOPT_POST,true);
+        curl_setopt($handler, CURLOPT_POSTFIELDS, $params);
+        curl_setopt($handler, CURLOPT_RETURNTRANSFER, true);
+        $response = curl_exec ($handler);
+        curl_close($handler);
+        $json=json_decode($response,true);
+        $result=$json['result'];
+
+        return "hash de la transferencia : ".$result;
+
+    }
+
+    function setStatePaidfromAccepted($id){
+        // hex de los parametros
+        $idHex = $this->String2Hex($id);
+        //tomar el numero de caracteres, dividir por 2 para obtener el numero de bytes y pasar ese numero a hex y dezplazarlo
+        $leghtIdHex = str_pad(dechex(strlen($idHex )/2), 64, "0", STR_PAD_LEFT);
+        // bytes desde el id del metodo hasta el argumento, hex de (2*32)=64 = 40
+        $argIdPos = str_pad(20, 64, "0", STR_PAD_LEFT);
+        //keccak-256 de setStatePaidfromAccepted(string) 94bbf62345d3434672a5db3353b10667f708adaa65c4074a2cb653ba0c911c4f
+        $call="0x94bbf623".$argIdPos.$leghtIdHex.$idHex;
+
+        $data  = [
+            'jsonrpc'=>'2.0','method'=>'eth_sendTransaction','params'=>[[
+                "from"=> self::ACCOUNT, "to"=> self::CONTRACT,"gas"=>"0x927c0","data"=> $call]],'id'=>67
+        ];
+        $params= json_encode($data);
+        $this->unlockAccount();
+        $handler = curl_init();
+        curl_setopt($handler, CURLOPT_URL, self::URl);
+        curl_setopt($handler, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+        curl_setopt($handler, CURLOPT_POST,true);
+        curl_setopt($handler, CURLOPT_POSTFIELDS, $params);
+        curl_setopt($handler, CURLOPT_RETURNTRANSFER, true);
+        $response = curl_exec ($handler);
+        curl_close($handler);
+        $json=json_decode($response,true);
+        $result=$json['result'];
+
+        return "hash de la transferencia : ".$result;
+
+    }
+
+    function setFactoringStateRequested($id){
+        // hex de los parametros
+        $idHex = $this->String2Hex($id);
+        //tomar el numero de caracteres, dividir por 2 para obtener el numero de bytes y pasar ese numero a hex y dezplazarlo
+        $leghtIdHex = str_pad(dechex(strlen($idHex )/2), 64, "0", STR_PAD_LEFT);
+        // bytes desde el id del metodo hasta el argumento, hex de (2*32)=64 = 40
+        $argIdPos = str_pad(20, 64, "0", STR_PAD_LEFT);
+        //keccak-256 de setFactoringStateRequested(string) d7bb6271bb81f3d26129c487c285ca805b04d00789925ce76f3e837bc8f1d046
+        $call="0xd7bb6271".$argIdPos.$leghtIdHex.$idHex;
+
+        $data  = [
+            'jsonrpc'=>'2.0','method'=>'eth_sendTransaction','params'=>[[
+                "from"=> self::ACCOUNT, "to"=> self::CONTRACT,"gas"=>"0x927c0","data"=> $call]],'id'=>67
+        ];
+        $params= json_encode($data);
+        $this->unlockAccount();
+        $handler = curl_init();
+        curl_setopt($handler, CURLOPT_URL, self::URl);
+        curl_setopt($handler, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+        curl_setopt($handler, CURLOPT_POST,true);
+        curl_setopt($handler, CURLOPT_POSTFIELDS, $params);
+        curl_setopt($handler, CURLOPT_RETURNTRANSFER, true);
+        $response = curl_exec ($handler);
+        curl_close($handler);
+        $json=json_decode($response,true);
+        $result=$json['result'];
+
+        return "hash de la transferencia : ".$result;
+
+    }
+
+    function setFactoringStateAcceptedfromRequested($id){
+        // hex de los parametros
+        $idHex = $this->String2Hex($id);
+        //tomar el numero de caracteres, dividir por 2 para obtener el numero de bytes y pasar ese numero a hex y dezplazarlo
+        $leghtIdHex = str_pad(dechex(strlen($idHex )/2), 64, "0", STR_PAD_LEFT);
+        // bytes desde el id del metodo hasta el argumento, hex de (2*32)=64 = 40
+        $argIdPos = str_pad(20, 64, "0", STR_PAD_LEFT);
+        //keccak-256 de setFactoringStateAcceptedfromRequested(string) ba32323fa688324c4766bb31280920bc536a819a6418901bcd5abecb762233fa
+        $call="0xba32323f".$argIdPos.$leghtIdHex.$idHex;
+
+        $data  = [
+            'jsonrpc'=>'2.0','method'=>'eth_sendTransaction','params'=>[[
+                "from"=> self::ACCOUNT, "to"=> self::CONTRACT,"gas"=>"0x927c0","data"=> $call]],'id'=>67
+        ];
+        $params= json_encode($data);
+        $this->unlockAccount();
+        $handler = curl_init();
+        curl_setopt($handler, CURLOPT_URL, self::URl);
+        curl_setopt($handler, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+        curl_setopt($handler, CURLOPT_POST,true);
+        curl_setopt($handler, CURLOPT_POSTFIELDS, $params);
+        curl_setopt($handler, CURLOPT_RETURNTRANSFER, true);
+        $response = curl_exec ($handler);
+        curl_close($handler);
+        $json=json_decode($response,true);
+        $result=$json['result'];
+
+        return "hash de la transferencia : ".$result;
+
+    }
 
 
-    function unlockAccount(){
+    private function unlockAccount(){
         // curl -X POST --data '{"jsonrpc":"2.0","method":"personal_unlockAccount","params":["0x7642b...", "password", 3600],"id":67}' http://localhost:8545
         $url = "http://localhost:8545";
         $data  = [
